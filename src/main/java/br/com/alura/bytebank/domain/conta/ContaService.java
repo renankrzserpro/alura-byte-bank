@@ -40,7 +40,8 @@ public class ContaService {
             throw new RegraDeNegocioException("Saldo insuficiente!");
         }
 
-        conta.sacar(valor);
+        Connection conn = connFactory.getConnection();
+        new ContaDAO(conn).alterarSaldo(conta.getNumero(), conta.getSaldo().subtract(valor));
     }
 
     public void realizarDeposito(Integer numeroDaConta, BigDecimal valor) {
