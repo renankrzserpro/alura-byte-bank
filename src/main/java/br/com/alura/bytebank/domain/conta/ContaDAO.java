@@ -78,6 +78,22 @@ public class ContaDAO {
         return contas;
     }
 
+    public void alterarSaldo(Integer numero, BigDecimal novoSaldo) {
+        String sql = "UPDATE conta SET saldo = ? WHERE numero = ?";
+
+        try {
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setBigDecimal(1, novoSaldo);
+            pst.setInt(2, numero);
+
+            pst.executeUpdate();
+            pst.close();
+            conn.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void remover(Integer numero) {
         String sql = "DELETE FROM conta WHERE numero = ?";
 

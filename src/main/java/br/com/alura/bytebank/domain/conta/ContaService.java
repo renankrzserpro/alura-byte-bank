@@ -45,12 +45,13 @@ public class ContaService {
 
     public void realizarDeposito(Integer numeroDaConta, BigDecimal valor) {
         var conta = buscarContaPorNumero(numeroDaConta);
+
         if (valor.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RegraDeNegocioException("Valor do deposito deve ser superior a zero!");
         }
 
-        conta.depositar(valor);
-
+        Connection conn = connFactory.getConnection();
+        new ContaDAO(conn).alterarSaldo(conta.getNumero(), conta.getSaldo().add(valor));
     }
 
     public void encerrar(Integer numeroDaConta) {
