@@ -2,14 +2,10 @@ package br.com.alura.bytebank.domain.conta;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Set;
 
 import br.com.alura.bytebank.ConnectionFactory;
 import br.com.alura.bytebank.domain.RegraDeNegocioException;
-import br.com.alura.bytebank.domain.cliente.Cliente;
 
 public class ContaService {
 
@@ -19,10 +15,9 @@ public class ContaService {
         this.connFactory = new ConnectionFactory();
     }
 
-    private Set<Conta> contas = new HashSet<>();
-
     public Set<Conta> listarContasAbertas() {
-        return contas;
+        Connection conn = connFactory.getConnection();
+        return new ContaDAO(conn).listar();
     }
 
     public BigDecimal consultarSaldo(Integer numeroDaConta) {
@@ -31,33 +26,8 @@ public class ContaService {
     }
 
     public void abrir(DadosAberturaConta dadosDaConta) {
-        var cliente = new Cliente(dadosDaConta.dadosCliente());
-        var conta = new Conta(dadosDaConta.numero(), cliente);
-        if (contas.contains(conta)) {
-            throw new RegraDeNegocioException("Já existe outra conta aberta com o mesmo número!");
-        }
-
-        String sql = "INSERT INTO conta (numero, saldo, cliente_nome, cliente_cpf, cliente_email)" +
-                "VALUES (?, ?, ?, ?, ?)";
-
         Connection conn = connFactory.getConnection();
-
-        PreparedStatement pst;
-
-        try {
-            pst = conn.prepareStatement(sql);
-
-            pst.setInt(1, conta.getNumero());
-            pst.setBigDecimal(2, BigDecimal.ZERO);
-            pst.setString(3, dadosDaConta.dadosCliente().nome());
-            pst.setString(4, dadosDaConta.dadosCliente().cpf());
-            pst.setString(5, dadosDaConta.dadosCliente().email());
-
-            pst.executeUpdate();
-            pst.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        new ContaDAO(conn).salvar(dadosDaConta);
     }
 
     public void realizarSaque(Integer numeroDaConta, BigDecimal valor) {
@@ -80,22 +50,29 @@ public class ContaService {
         }
 
         conta.depositar(valor);
+
     }
 
     public void encerrar(Integer numeroDaConta) {
-        var conta = buscarContaPorNumero(numeroDaConta);
+        Connection conn = connFactory.getConnection();
+        ContaDAO dao = new ContaDAO(conn);
+        Conta conta = dao.procurarPorNumero(numeroDaConta);
+
         if (conta.possuiSaldo()) {
             throw new RegraDeNegocioException("Conta não pode ser encerrada pois ainda possui saldo!");
         }
 
-        contas.remove(conta);
+        dao.remover(numeroDaConta);
     }
 
     private Conta buscarContaPorNumero(Integer numero) {
-        return contas
-                .stream()
-                .filter(c -> c.getNumero() == numero)
-                .findFirst()
-                .orElseThrow(() -> new RegraDeNegocioException("Não existe conta cadastrada com esse número!"));
+        Connection conn = connFactory.getConnection();
+        Conta conta = new ContaDAO(conn).procurarPorNumero(numero);
+
+        if (conta == null) {
+            throw new RegraDeNegocioException("Não existe conta cadastrada com esse número!");
+        }
+
+        return conta;
     }
 }
