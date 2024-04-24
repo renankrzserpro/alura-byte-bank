@@ -1,9 +1,9 @@
 package br.com.alura.bytebank.domain.conta;
 
-import br.com.alura.bytebank.domain.cliente.Cliente;
-
 import java.math.BigDecimal;
 import java.util.Objects;
+
+import br.com.alura.bytebank.domain.cliente.Cliente;
 
 public class Conta {
 
@@ -15,6 +15,12 @@ public class Conta {
         this.numero = numero;
         this.titular = titular;
         this.saldo = BigDecimal.ZERO;
+    }
+
+    public Conta(Integer numero, BigDecimal saldo, Cliente titular) {
+        this.numero = numero;
+        this.saldo = saldo;
+        this.titular = titular;
     }
 
     public boolean possuiSaldo() {
@@ -31,8 +37,10 @@ public class Conta {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Conta conta = (Conta) o;
         return numero.equals(conta.numero);
     }
