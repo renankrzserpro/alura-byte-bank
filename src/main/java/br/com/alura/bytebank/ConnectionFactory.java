@@ -4,17 +4,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class ConexaoDB {
+public class ConnectionFactory {
 
     private static final String URL = "jdbc:mysql://localhost:3306/byte_bank?user=alura&password=alura";
 
-    public static void main(String[] args) {
+    public Connection getConnection() {
         try {
-            Connection conn = DriverManager.getConnection(URL);
-            System.out.println("Connected!");
-            conn.close();
+            return DriverManager.getConnection(URL);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
