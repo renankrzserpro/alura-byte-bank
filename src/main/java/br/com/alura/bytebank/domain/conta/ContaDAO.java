@@ -63,10 +63,11 @@ public class ContaDAO {
                 String nome = rs.getString(3);
                 String cpf = rs.getString(4);
                 String email = rs.getString(5);
+                boolean ativa = rs.getBoolean(6);
 
                 DadosCadastroCliente dados = new DadosCadastroCliente(nome, cpf, email);
                 Cliente cliente = new Cliente(dados);
-                Conta conta = new Conta(numero, saldo, cliente);
+                Conta conta = new Conta(numero, saldo, cliente, ativa);
 
                 contas.add(conta);
             }
@@ -93,6 +94,26 @@ public class ContaDAO {
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setBigDecimal(1, novoSaldo);
             pst.setInt(2, numero);
+            pst.executeUpdate();
+            conn.commit();
+            pst.close();
+            conn.close();
+        } catch (SQLException e) {
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
+        }
+    }
+
+    public void desativar(Integer numero) {
+        String sql = "UPDATE conta SET ativa = false WHERE numero = ?";
+
+        try {
+            conn.setAutoCommit(false);
+            PreparedStatement pst = conn.prepareStatement(sql);
+            pst.setInt(1, numero);
             pst.executeUpdate();
             conn.commit();
             pst.close();
@@ -143,10 +164,11 @@ public class ContaDAO {
                 String nome = rs.getString(3);
                 String cpf = rs.getString(4);
                 String email = rs.getString(5);
+                boolean ativa = rs.getBoolean(6);
 
                 DadosCadastroCliente dados = new DadosCadastroCliente(nome, cpf, email);
                 Cliente cliente = new Cliente(dados);
-                conta = new Conta(num, saldo, cliente);
+                conta = new Conta(num, saldo, cliente, ativa);
             }
 
             rs.close();
