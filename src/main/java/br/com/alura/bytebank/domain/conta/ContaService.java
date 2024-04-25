@@ -61,15 +61,14 @@ public class ContaService {
     }
 
     public void encerrar(Integer numeroDaConta) {
-        Connection conn = connFactory.getConnection();
-        ContaDAO dao = new ContaDAO(conn);
-        Conta conta = dao.procurarPorNumero(numeroDaConta);
+        var conta = buscarContaPorNumero(numeroDaConta);
 
         if (conta.possuiSaldo()) {
             throw new RegraDeNegocioException("Conta não pode ser encerrada pois ainda possui saldo!");
         }
 
-        dao.remover(numeroDaConta);
+        Connection conn = connFactory.getConnection();
+        new ContaDAO(conn).remover(conta.getNumero());
     }
 
     private Conta buscarContaPorNumero(Integer numero) {

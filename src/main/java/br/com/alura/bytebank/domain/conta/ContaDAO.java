@@ -23,24 +23,27 @@ public class ContaDAO {
         var cliente = new Cliente(dadosDaConta.dadosCliente());
         var conta = new Conta(dadosDaConta.numero(), cliente);
 
-        PreparedStatement pst;
         String sql = "INSERT INTO conta (numero, saldo, cliente_nome, cliente_cpf, cliente_email)" +
                 "VALUES (?, ?, ?, ?, ?)";
 
         try {
-            pst = conn.prepareStatement(sql);
-
+            conn.setAutoCommit(false);
+            PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, conta.getNumero());
             pst.setBigDecimal(2, BigDecimal.ZERO);
             pst.setString(3, dadosDaConta.dadosCliente().nome());
             pst.setString(4, dadosDaConta.dadosCliente().cpf());
             pst.setString(5, dadosDaConta.dadosCliente().email());
-
             pst.executeUpdate();
+            conn.commit();
             pst.close();
             conn.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
         }
     }
 
@@ -50,8 +53,8 @@ public class ContaDAO {
         String sql = "SELECT * FROM conta";
 
         try {
+            conn.setAutoCommit(false);
             PreparedStatement pst = conn.prepareStatement(sql);
-
             ResultSet rs = pst.executeQuery();
 
             while (rs.next()) {
@@ -72,7 +75,11 @@ public class ContaDAO {
             pst.close();
             conn.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
         }
 
         return contas;
@@ -82,15 +89,20 @@ public class ContaDAO {
         String sql = "UPDATE conta SET saldo = ? WHERE numero = ?";
 
         try {
+            conn.setAutoCommit(false);
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setBigDecimal(1, novoSaldo);
             pst.setInt(2, numero);
-
             pst.executeUpdate();
+            conn.commit();
             pst.close();
             conn.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
         }
     }
 
@@ -98,12 +110,19 @@ public class ContaDAO {
         String sql = "DELETE FROM conta WHERE numero = ?";
 
         try {
+            conn.setAutoCommit(false);
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, numero);
             pst.executeUpdate();
+            conn.commit();
             pst.close();
+            conn.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
         }
     }
 
@@ -113,9 +132,9 @@ public class ContaDAO {
         String sql = "SELECT * FROM conta WHERE numero = ?";
 
         try {
+            conn.setAutoCommit(false);
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setInt(1, numero);
-
             ResultSet rs = pst.executeQuery();
 
             if (rs.next()) {
@@ -134,7 +153,11 @@ public class ContaDAO {
             pst.close();
             conn.close();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            try {
+                conn.rollback();
+            } catch (SQLException rollbackException) {
+                throw new RuntimeException(rollbackException);
+            }
         }
 
         return conta;
